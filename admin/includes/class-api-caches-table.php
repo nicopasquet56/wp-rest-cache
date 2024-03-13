@@ -52,8 +52,8 @@ class API_Caches_Table extends \WP_List_Table {
 			throw new \Exception(
 				sprintf(
 					/* translators: %s: api-type */
-					__( 'Invalid API type: %s', 'wp-rest-cache' ),
-					$api_type
+					esc_html__( 'Invalid API type: %s', 'wp-rest-cache' ),
+					esc_html( $api_type )
 				)
 			);
 		}
@@ -308,8 +308,6 @@ class API_Caches_Table extends \WP_List_Table {
 	 * @return void
 	 */
 	public function prepare_items() {
-		$this->process_action();
-
 		$columns               = $this->get_columns();
 		$hidden                = [];
 		$sortable              = $this->get_sortable_columns();
@@ -358,7 +356,7 @@ class API_Caches_Table extends \WP_List_Table {
 	 */
 	private function process_single_action( $action ) {
 		if ( ! isset( $_GET['wp_rest_cache_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_GET['wp_rest_cache_nonce'] ), 'wp_rest_cache_' . $action . '_cache' ) ) {
-			die( 'No naughty business please' );
+			return;
 		}
 		$cache_key = filter_input( INPUT_GET, 'cache_key', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if( 'unlock' === $action ) {
@@ -366,6 +364,8 @@ class API_Caches_Table extends \WP_List_Table {
 		} else {
 			self::clear_cache( $cache_key, ( 'delete' === $action ) );
 		}
+
+		wp_safe_redirect( admin_url( 'options-general.php?page=wp-rest-cache&sub=endpoint-api' ) );
 	}
 
 	/**
@@ -376,6 +376,9 @@ class API_Caches_Table extends \WP_List_Table {
 	 * @return void
 	 */
 	private function process_bulk_action( $action ) {
+		if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ), 'bulk-' . sanitize_key( __( 'Endpoint API Caches', 'wp-rest-cache' ) ) ) ) {
+			return;
+		}
 		$caches = filter_input( INPUT_GET, 'bulk-flush', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_REQUIRE_ARRAY );
 		foreach ( $caches as $cache_key ) {
 			if( 'bulk-unlock' === $action ) {
@@ -384,5 +387,6 @@ class API_Caches_Table extends \WP_List_Table {
 				self::clear_cache( $cache_key, ( 'bulk-delete' === $action ) );
 			}
 		}
+		wp_safe_redirect( admin_url( 'options-general.php?page=wp-rest-cache&sub=endpoint-api' ) );
 	}
 }
