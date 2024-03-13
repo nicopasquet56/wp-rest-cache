@@ -337,7 +337,7 @@ class Caching {
 	 * @return void
 	 */
 	public function save_post( $post_id, $post, $update ) {
-		if ( 'auto-draft' === $post->post_status ) {
+		if ( 'auto-draft' === $post->post_status || filter_has_var( INPUT_POST, 'ignore_cache' ) === true ) {
 			return;
 		}
 		if ( $update ) {
@@ -374,7 +374,7 @@ class Caching {
 	 * @return void
 	 */
 	public function transition_post_status( $new_status, $old_status, $post ) {
-		if ( 'publish' !== $new_status && 'publish' !== $old_status ) {
+		if ( 'publish' !== $new_status && 'publish' !== $old_status || filter_has_var( INPUT_POST, 'ignore_cache' ) === true ) {
 			return;
 		}
 
